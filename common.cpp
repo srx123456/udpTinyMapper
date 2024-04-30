@@ -9,8 +9,6 @@
 #include "log.h"
 #include <nlohmann/json.hpp>
 
-using json = nlohmann::json;
-
 
 int about_to_exit=0;
 
@@ -556,12 +554,12 @@ void saveListToJsonAsync(const std::list<udp_pair_t>& udp_pair_list, const std::
     // 创建一个线程来执行保存操作
     std::thread saveThread([udp_pair_list, filename]() {
         // 创建一个json对象
-        json jsonData;
+        nlohmann::json jsonData;
 
         // 遍历udp_pair_list，将每个udp_pair_t对象转换为json格式并添加到jsonData中
         for (const auto& udp_pair : udp_pair_list)
         {
-            json udpPairJson;
+            nlohmann::json udpPairJson;
 			udpPairJson["fd64"] = udp_pair.fd64;
             udpPairJson["localIP"] = udp_pair.srcAddr_s;
             udpPairJson["remoteIP"] = udp_pair.dstAddr_s;
