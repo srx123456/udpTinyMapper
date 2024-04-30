@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/suoruixiang/Documents/workSpace/cpp/tinyPortMapper-20240427.0",
+      "program": "/Users/suoruixiang/Documents/workSpace/cpp/tinyPortMapper-20240427.0/build/Debug/outDebug"
+    }
+  ]
+}
