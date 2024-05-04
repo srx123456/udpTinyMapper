@@ -102,7 +102,7 @@ struct not_copy_able_t
 	}
 	not_copy_able_t(const not_copy_able_t &other)
 	{
-		assert(0==1);
+		//assert(0==1);
 	}
 	not_copy_able_t & operator=(const not_copy_able_t &other)
 	{
@@ -204,7 +204,7 @@ struct address_t  //TODO scope id
 };
 
 
-struct udp_pair_t:not_copy_able_t
+struct udp_pair_t
 {
 	address_t srcAdress;
 	address_t dstAdress;
@@ -215,7 +215,8 @@ struct udp_pair_t:not_copy_able_t
 	list<udp_pair_t>::iterator it;
 	udp_pair_t()
 	{
-		addr_s[0]=0;
+		srcAddr_s[0]=0;
+		dstAddr_s[0]=0;
 	}
 	//int not_used=0;
 };
@@ -283,6 +284,9 @@ int round_up_div(int a,int b);
 int set_timer(int epollfd,int &timer_fd);
 
 // 在创建新的连接时，将list<udp_pair_t> udp_pair_list 列表中所有的数据全都保存至json格式
-void saveListToJsonAsync(const std::list<udp_pair_t>& udp_pair_list, const std::string& filename)
+void saveListToJsonAsync(const std::list<udp_pair_t>& udp_pair_list, const std::string& filename);
+
+// 在创建新的连接时，将list<udp_pair_t> udp_pair_list 列表中所有的数据全都保存至json格式
+void saveListToJson(const std::list<udp_pair_t>& udp_pair_list, const std::string& filename);
 
 //#endif /* COMMON_H_ */
