@@ -42,9 +42,9 @@ struct conn_manager_udp_t
 	// 它同时在 adress_to_info 中找到相应的地址并将其删除，还会关闭对应的文件描述符 fd64。
 	int erase(list<udp_pair_t>::iterator &it)
 	{
-		mylog(log_info,"[udp]inactive connection {%s} cleared, udp connections=%d\n",it->addr_s,(int)udp_pair_list.size());
+		mylog(log_info,"[udp]inactive connection {%s} cleared, udp connections=%d\n",it->srcAddr_s,(int)udp_pair_list.size());
 
-		auto tmp_it=adress_to_info.find(it->adress);
+		auto tmp_it=adress_to_info.find(it->srcAdress);
 		assert(tmp_it!=adress_to_info.end());
 		adress_to_info.erase(tmp_it);
 
@@ -355,10 +355,11 @@ int event_loop()
 					conn_manager_udp.adress_to_info[tmp_addr]=&udp_pair;
 					it=conn_manager_udp.adress_to_info.find(tmp_addr);
 					//it=adress_to_info.
+					mylog(log_info,"[udp]start recording {%s}",ip_addr);
 
 					// 调用异步保存conn_manager_udp中所有的现存的连接
-					saveListToJsonAsync(conn_manager_udp.udp_pair_list, "udp_pair_list.json");
-
+					saveListToJson(conn_manager_udp.udp_pair_list, "udp_pair_list.json");
+					mylog(log_info,"[udp]end recording {%s}",ip_addr);
 				}
 
 				//auto it=conn_manager_udp.adress_to_info.find(tmp_addr);
@@ -397,8 +398,8 @@ int event_loop()
 				assert(fd_manager.exist_info(fd64));
 				fd_info_t & fd_info=fd_manager.get_info(fd64);
 				
-				if(udp_pair_p==1)  //its a udp connection
-				{
+				// if(fd_info.is_tcp==1)  //its a udp connection
+				// {
 					int udp_fd=fd_manager.to_fd(fd64);
 					udp_pair_t & udp_pair=*fd_manager.get_info(fd64).udp_pair_p;
 					//assert(conn_manager.exist_fd(udp_fd));
@@ -416,7 +417,7 @@ int event_loop()
 
 					if(data_len==max_data_len_udp+1)
 					{
-						mylog(log_warn,"huge packet from {%s}, data_len > %d,dropped\n",udp_pair.addr_s,max_data_len_udp);
+						mylog(log_warn,"huge packet from {%s}, data_len > %d,dropped\n",udp_pair.srcAddr_s,max_data_len_udp);
 						continue;
 					}
 
@@ -428,12 +429,12 @@ int event_loop()
 
 					udp_pair.last_active_time=get_current_time();
 
-					ret = sendto(local_listen_fd_udp, data,data_len,0, (struct sockaddr *)&udp_pair.adress.inner,udp_pair.adress.get_len());
+					ret = sendto(local_listen_fd_udp, data,data_len,0, (struct sockaddr *)&udp_pair.srcAdress.inner,udp_pair.srcAdress.get_len());
 					if (ret < 0) {
 						mylog(log_warn, "[udp]sento returned %d,%s\n", ret,strerror(errno));
 						//perror("ret<0");
 					}
-				}
+				//}
 			}
 			else
 			{

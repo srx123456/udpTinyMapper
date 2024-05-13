@@ -7,15 +7,17 @@
 
 #include "common.h"
 #include "log.h"
-#include <nlohmann/json.hpp>
+#include <thread>
+#include <json/json.h>
+#include <future>
+#include <iostream>
+#include <fstream>
 
 
 int about_to_exit=0;
 
 
 int socket_buf_size=1024*1024;
-
-
 
 
 struct random_fd_t
@@ -548,40 +550,100 @@ u32_t sdbm(unsigned char *str,int len)
      return hash;
  }
 
-// 异步保存udp_pair_list为json文件
-void saveListToJsonAsync(const std::list<udp_pair_t>& udp_pair_list, const std::string& filename)
+// 保存udp_pair_list为json文件  目前是同步，后续再优化
+void saveListToJson(const std::list<udp_pair_t>& udp_pair_list, const std::string& filename)
 {
+	std::cout<< "====>>>> enter record part!" <<std::endl;
+	std::cout<< "====>>>> list nums : " << udp_pair_list.size() <<std::endl;
+
+	Json::Value root; //根节点
+	int i = 1;
+	for (const auto& udp_pair : udp_pair_list)
+        {
+			// string src = udp_pair.srcAddr_s;
+			// string dst = udp_pair.dstAddr_s;
+			// std::cout<< "====>>>> "<< src << " and " << dst <<std::endl;
+			//子节点
+    		Json::Value partner;
+			//partner["fd64"] = Json::Value(udp_pair.fd64);
+			std::cout<< "====>>>> enter circle!" <<std::endl;
+			string src = udp_pair.srcAddr_s;
+			string dst = udp_pair.dstAddr_s;
+            partner["localIP"] = Json::Value(src);
+            partner["remoteIP"] = Json::Value(dst);
+            
+            root["connection "+ i++] = Json::Value(partner);
+        }
+	fstream f;
+    f.open (filename, ios::out);
+    if( !f.is_open() ){
+        std::cout<< "Open file error!" <<std::endl;
+    }
+    f << root.toStyledString(); //转换为json格式并存到文件流
+   	f.close();
     // 创建一个线程来执行保存操作
-    std::thread saveThread([udp_pair_list, filename]() {
-        // 创建一个json对象
-        nlohmann::json jsonData;
+    // std::thread saveThread([udp_pair_list, filename]() {
+	// 	Json::Value root; //根节点
+	// 	int i = 1;
+	// 	std::cout<< "====>>>> list nums : " << udp_pair_list.size() <<std::endl;
+	// 	// 遍历udp_pair_list，将每个udp_pair_t对象转换为json格式并添加到jsonData中
+	// 	for (const auto& udp_pair : udp_pair_list)
+    //     {
+	// 		//子节点
+    // 		Json::Value partner;
+	// 		//partner["fd64"] = Json::Value(udp_pair.fd64);
+	// 		std::cout<< "====>>>> enter circle!" <<std::endl;
+	// 		string src = udp_pair.srcAddr_s;
+	// 		string dst = udp_pair.dstAddr_s;
+    //         partner["localIP"] = Json::Value(src);
+    //         partner["remoteIP"] = Json::Value(dst);
+            
+    //         root["connection "+ i++] = Json::Value(partner);
+    //     }
+ 
+    // 	fstream f;
+    // 	f.open (filename, ios::out);
+    // 	if( !f.is_open() ){
+    //     	std::cout<< "Open file error!" <<std::endl;
+    // 	}
+    // 	f << root.toStyledString(); //转换为json格式并存到文件流
+   	// 	f.close();
+
+    // });
+
+    // // 分离线程，使其在后台运行
+    // saveThread.detach();
+}
+
+// 异步保存udp_pair_list为json文件
+void saveListToJsonAsync(const std::list<udp_pair_t>& udp_pair_list, const std::string& filename) {
+    // 异步执行保存操作
+    std::future<void> saveFuture = std::async(std::launch::async, [&udp_pair_list, filename]() {
+        Json::Value root; // 根节点
+        int i = 1;
 
         // 遍历udp_pair_list，将每个udp_pair_t对象转换为json格式并添加到jsonData中
-        for (const auto& udp_pair : udp_pair_list)
-        {
-            nlohmann::json udpPairJson;
-			udpPairJson["fd64"] = udp_pair.fd64;
-            udpPairJson["localIP"] = udp_pair.srcAddr_s;
-            udpPairJson["remoteIP"] = udp_pair.dstAddr_s;
-            
-            jsonData.push_back(udpPairJson);
+        for (const auto& udp_pair : udp_pair_list) {
+            //子节点
+    		Json::Value partner;
+
+			std::cout<< "====>>>> enter circle!" <<std::endl;
+			string src = udp_pair.srcAddr_s;
+			string dst = udp_pair.dstAddr_s;
+            partner["localIP"] = Json::Value(src);
+            partner["remoteIP"] = Json::Value(dst);
+
+            root["connection " + std::to_string(i++)] = partner;
         }
 
-        // 将jsonData保存为json文件
+        // 将Json对象写入文件
         std::ofstream outputFile(filename);
-        if (outputFile.is_open())
-        {
-            outputFile << jsonData.dump(4); // 使用4个空格缩进
-            outputFile.close();
-            std::cout << "保存成功" << std::endl;
+        if (!outputFile.is_open()) {
+            std::cerr << "Failed to open file for writing: " << filename << std::endl;
+            return;
         }
-        else
-        {
-            std::cout << "保存失败" << std::endl;
-        }
+        outputFile << root.toStyledString(); // 转换为json格式并存到文件流
+        outputFile.close();
     });
-
-    // 分离线程，使其在后台运行
-    saveThread.detach();
 }
 
