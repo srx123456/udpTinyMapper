@@ -357,9 +357,6 @@ int event_loop()
 					//it=adress_to_info.
 					mylog(log_info,"[udp]start recording {%s}",ip_addr);
 
-					// 调用异步保存conn_manager_udp中所有的现存的连接
-					saveListToJson(conn_manager_udp.udp_pair_list, "udp_pair_list.json");
-					mylog(log_info,"[udp]end recording {%s}",ip_addr);
 				}
 
 				//auto it=conn_manager_udp.adress_to_info.find(tmp_addr);
@@ -544,6 +541,11 @@ void process_arg(int argc, char *argv[])
 	}
 
 	int no_l = 1, no_r = 1;
+	//l_str是本机IP+PORT
+	//std::string l_str = "";
+	//std::string r_str = "";
+	// 192.168.2.1:7676 : 192.168.3.89:7676
+	//std::string result = "";
 	while ((opt = getopt_long(argc, argv, "l:r:tuh:",long_options,&option_index)) != -1)
 	{
 		//string opt_key;
@@ -554,10 +556,12 @@ void process_arg(int argc, char *argv[])
 		case 'l':
 			no_l = 0;
 			local_addr.from_str(optarg);
+			//l_str = optarg;
 			break;
 		case 'r':
 			no_r = 0;
 			remote_addr.from_str(optarg);
+			//r_str = optarg;
 			break;
 		case 't':
 			enable_tcp=1;
@@ -612,6 +616,8 @@ void process_arg(int argc, char *argv[])
 	if (no_l || no_r)
 		myexit(-1);
 
+	//result = l_str+" : "+r_str;
+	// 调用一次延时记录l:r的程序
 	if(enable_tcp==0&&enable_udp==0)
 	{
 		//enable_tcp=1;
